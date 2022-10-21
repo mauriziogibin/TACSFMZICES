@@ -1,0 +1,3 @@
+Data Source: DG MARE - Unit C4 Data Management
+This dataset is provided on a "best effort" basis. No rights can be derived from these files. 
+The boundaries and names shown in this dataset do not imply official endorsement or acceptance by the European Union.
