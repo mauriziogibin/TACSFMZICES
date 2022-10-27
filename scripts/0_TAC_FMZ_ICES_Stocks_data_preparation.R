@@ -176,6 +176,72 @@ ices_filtered_stock_list[,Stock_Area:=toupper(substring(StockCode,5))]
 missing_ices_filtered_stock_list <- 
   ices_filtered_stock_list[!Stock_Area %in%stocks_areas_by_stock_ass_graphs_list$Stock_Area,]
 
+ices_ecoreg <- st_read('../data/ices/ICES_ecoregions/ICES_ecoregions_20171207_erase_ESRI.shp')
+
+ices_filtered_stock_list_unique <- unique(ices_filtered_stock_list,by='StockCode')
+
+names(stocks_ices_unique)
+names(stocks_ices_unique)[9] <- 'ICESAreas'
+ices_filtered_stock_list_unique <- ices_filtered_stock_list_unique[,.(StockCode,EcoRegion)]
+# SPlitting the ICES Areas
+setorder(ices_filtered_stock_list_unique,StockCode)
+EcoregionsSplit <- cbind(ices_filtered_stock_list_unique$StockCode,
+                        setDT(tstrsplit(as.character(ices_filtered_stock_list_unique$EcoRegion),
+                                        ",", fixed=TRUE))[])
+
+ices_filtered_stock_list_unique_long <- melt(EcoregionsSplit,
+                                id.vars = 'V1',
+                                values = names(EcoregionsSplit)[-1])
+
+ices_filtered_stock_list_unique_long <- ices_filtered_stock_list_unique_long[!is.na(value)]
+ices_filtered_stock_list_unique_long$variable <- NULL
+names(ices_filtered_stock_list_unique_long) <- c('StockCode','EcoRegion')
+ices_filtered_stock_list_unique_long[,EcoRegion:=gsub('Ecoregion','',EcoRegion)]
+
+# Intersecting ICES Ecoregions with ICES Areas
+st_crs(ices_ecoreg)
+ices_ecoreg <- st_transform(ices_ecoreg,3035)
+ices_ecoreg <- st_make_valid(ices_ecoreg)
+
+EcoRegion_by_ICES_Areas <- st_intersection(ices_ecoreg,icesareas)
+
+EcoRegion_by_ICES_Areas$Shape_Leng <- NULL
+EcoRegion_by_ICES_Areas$Shape_Le_1 <- NULL
+EcoRegion_by_ICES_Areas$Shape_Leng <- NULL
+EcoRegion_by_ICES_Areas$Shape_Area <- NULL
+EcoRegion_by_ICES_Areas$OBJECTID_1 <- NULL
+EcoRegion_by_ICES_Areas$OBJECTID.1 <- NULL
+EcoRegion_by_ICES_Areas$Area_km2 <- NULL
+
+#EcoRegion_by_ICES_Areas <- st_transform(EcoRegion_by_ICES_Areas,3035)
+# Did we get all ICES EcoRegions?
+EcoRegion_without_ICES_Areas <- ices_ecoreg[!ices_ecoreg$Ecoregion%in%unique(EcoRegion_by_ICES_Areas$Ecoregion),]
+
+EcoRegion_without_ICES_Areas$Shape_Le_1 <- NULL
+EcoRegion_without_ICES_Areas$Shape_Leng <- NULL
+EcoRegion_without_ICES_Areas$Shape_Area <- NULL
+
+st_crs(EcoRegion_by_ICES_Areas) <- st_crs(EcoRegion_without_ICES_Areas)
+
+EcoRegion_by_ICES_Areas <- st_transform(EcoRegion_by_ICES_Areas,4326)
+EcoRegion_without_ICES_Areas <- st_transform(EcoRegion_without_ICES_Areas,4326)
+length(unique(EcoRegion_by_ICES_Areas$Ecoregion))
+length(unique(EcoRegion_without_ICES_Areas$Ecoregion))
+
+names(EcoRegion_by_ICES_Areas)[!names(EcoRegion_by_ICES_Areas)%in%names(EcoRegion_without_ICES_Areas)]
+EcoRegion_without_ICES_Areas$Major_FA <- ""
+EcoRegion_without_ICES_Areas$SubArea <- ""
+EcoRegion_without_ICES_Areas$Division <- ""
+EcoRegion_without_ICES_Areas$SubDivisio<- ""
+EcoRegion_without_ICES_Areas$Unit<- ""
+EcoRegion_without_ICES_Areas$Area_Full<- ""
+EcoRegion_without_ICES_Areas$Area_27<- ""
+
+ices_ecoregion_by_ices_areas <- rbind(EcoRegion_by_ICES_Areas,
+                                      EcoRegion_without_ICES_Areas)
+                                      
+
+#EcoRegion_by_ICES_Areas <- unique(EcoRegion_by_ICES_Areas,by='geometry')
 
 fwrite(missing_ices_filtered_stock_list,'../output/Stocks_and_Areas_in_ICES_filtered_stock_list_not_present_in_stock_ass_graph_data.csv')
 st_write(stocks_ices_final,'../output/ICES_Stocks_by_ICES_Areas_20160601_3857.shp',append = F)
@@ -209,7 +275,20 @@ icesareas_fmz_stocks_year$ICES_Area_km2<- st_area(icesareas_fmz_stocks_year)
 icesareas_fmz_stocks_year <- st_transform(icesareas_fmz_stocks_year,4326)
 icesareas_fmz_stocks_year <- st_make_valid(icesareas_fmz_stocks_year)
 
+ices_ecoregion_by_ices_areas <- st_transform(ices_ecoregion_by_ices_areas,3035)
+ices_ecoregion_by_ices_areas_fmz_stocks_year <- st_intersection(fmz_stocks_year_unique,ices_ecoregion_by_ices_areas)
 #icesareas_fmz_stocks_year$Species_TAC <- substring(icesareas_fmz_stocks_year$Stocks_v7_,1,3)
+
+ices_ecoregion_by_ices_areas_fmz_stocks_year$OBJECTID <- NULL
+
+fwrite(,
+       '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.csv')
+
+
+st_write(ices_ecoregion_by_ices_areas_fmz_stocks_year,
+         '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.shp',
+         append=F,
+         delete_dsn = T)
 
 st_write(icesareas_fmz_stocks_year,
          '../output/FMZ_by_ICES_Areas_20160601_4326.shp',
