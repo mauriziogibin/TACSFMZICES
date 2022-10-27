@@ -14,8 +14,8 @@ library(units)
 #- Clear workspace
 rm(list=ls())
 # cDir <- setwd("~Work=-/FDI2018/")
-cDir <- "/media/maurizio/BETA_Seagate/work/CFP"
-cDir <- "D://CFP/"
+#cDir <- "/media/maurizio/BETA_Seagate/work/CFP"
+cDir <- "D://TACSFMZICES//"
 options(scipen = 999)
 options(digits = 9)
 #- Clear workspace
@@ -157,12 +157,30 @@ ICESAReasSplit  <- NULL
 fixed_missing_stocks  <- NULL
 icesareas_missing_candidates  <- NULL
 
-stocks_ices_final$Species_ICES <- toupper(substring(stocks_ices_final$FishStock,3))
+stocks_ices_final$Stock_Area <- toupper(substring(stocks_ices_final$FishStock,5))
+stocks_ices_final$Species_ICES <- toupper(substring(stocks_ices_final$FishStock,1,3))
 
+stocks_areas_by_stock_ass_graphs_list <- stocks_ices_final
+stocks_areas_by_stock_ass_graphs_list$FishStock <- NULL;
+
+
+stocks_areas_by_stock_ass_graphs_list <- unique(as.data.table(`st_geometry<-`(stocks_areas_by_stock_ass_graphs_list,NULL)),
+                                                          by=c('Area_Full','Stock_Area'))
+                                            
+stocks_areas_by_stock_ass_graphs_list <- merge(stocks_areas_by_stock_ass_graphs_list,
+                                           icesareas[,c("Area_Full","geometry")])
+# Loading the ices filtered stock list
+ices_filtered_stock_list <- fread('../data/ices/STOCK ASSESSMENT GRAPHS 2022-09-19/ICES_FilteredStocklist.csv')
+ices_filtered_stock_list[,Stock_Area:=toupper(substring(StockCode,5))]
+
+missing_ices_filtered_stock_list <- 
+  ices_filtered_stock_list[!Stock_Area %in%stocks_areas_by_stock_ass_graphs_list$Stock_Area,]
+
+
+fwrite(missing_ices_filtered_stock_list,'../output/Stocks_and_Areas_in_ICES_filtered_stock_list_not_present_in_stock_ass_graph_data.csv')
 st_write(stocks_ices_final,'../output/ICES_Stocks_by_ICES_Areas_20160601_3857.shp',append = F)
-
+st_write(stocks_areas_by_ices_areas_unique,'../output/ICES_Stocks_by_ICES_Areas_Unique_20160601_3857.shp',append = F)
 fwrite(missing_stocks,'../output/stocks_ices_unique_long_with_missing_ICES_Area_geometry.csv')
-
 fwrite(`st_geometry<-`(stocks_ices_final,NULL),'../output/stocks_ices_unique_long.csv')
 
 tac_year <- 2022
