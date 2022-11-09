@@ -147,7 +147,7 @@ stocks_ices_final$OBJECTID <- NULL
 #stocks_ices_final <- st_make_valid(stocks_ices_final)
 
 stocks_ices               <- NULL
-stocks_ices_unique  <- NULL
+#stocks_ices_unique  <- NULL
 stocks_ices_unique_long  <- NULL
 stocks_icesareas  <- NULL
 stocks_ok  <- NULL
@@ -203,6 +203,9 @@ st_crs(ices_ecoreg)
 ices_ecoreg <- st_transform(ices_ecoreg,3035)
 ices_ecoreg <- st_make_valid(ices_ecoreg)
 
+icesareas <- st_transform(icesareas,3035)
+icesareas <- st_make_valid(icesareas)
+
 EcoRegion_by_ICES_Areas <- st_intersection(ices_ecoreg,icesareas)
 
 EcoRegion_by_ICES_Areas$Shape_Leng <- NULL
@@ -216,7 +219,8 @@ EcoRegion_by_ICES_Areas$Area_km2 <- NULL
 #EcoRegion_by_ICES_Areas <- st_transform(EcoRegion_by_ICES_Areas,3035)
 # Did we get all ICES EcoRegions?
 EcoRegion_without_ICES_Areas <- ices_ecoreg[!ices_ecoreg$Ecoregion%in%unique(EcoRegion_by_ICES_Areas$Ecoregion),]
-
+length(unique(EcoRegion_by_ICES_Areas$Ecoregion))
+length(unique(ices_ecoreg$Ecoregion))
 EcoRegion_without_ICES_Areas$Shape_Le_1 <- NULL
 EcoRegion_without_ICES_Areas$Shape_Leng <- NULL
 EcoRegion_without_ICES_Areas$Shape_Area <- NULL
@@ -259,8 +263,6 @@ fmz_stocks_year <- merge(fmz,tac_stocks_year,by='FMZ_ID')
 fmz_stocks_year <- st_transform(fmz_stocks_year,3035)
 fmz_stocks_year <- st_make_valid(fmz_stocks_year)
 
-icesareas <- st_transform(icesareas,3035)
-icesareas <- st_make_valid(icesareas)
 
 fmz_stocks_year_unique <- fmz_stocks_year[,c('FMZ_ID',"Descriptio","Def_analyt",'geometry')]
 fmz_stocks_year_unique <- unique(fmz_stocks_year_unique,by='FMZ_ID')
@@ -281,7 +283,10 @@ ices_ecoregion_by_ices_areas_fmz_stocks_year <- st_intersection(fmz_stocks_year_
 
 ices_ecoregion_by_ices_areas_fmz_stocks_year$OBJECTID <- NULL
 
-fwrite(,
+
+ices_ecoregion_by_ices_areas_fmz_stocks_yearDT <- `st_geometry<-`(ices_ecoregion_by_ices_areas_fmz_stocks_year,NULL)
+
+fwrite(ices_ecoregion_by_ices_areas_fmz_stocks_yearDT,
        '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.csv')
 
 
