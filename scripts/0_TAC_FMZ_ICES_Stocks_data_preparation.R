@@ -247,11 +247,11 @@ ices_ecoregion_by_ices_areas <- rbind(EcoRegion_by_ICES_Areas,
 
 #EcoRegion_by_ICES_Areas <- unique(EcoRegion_by_ICES_Areas,by='geometry')
 
-fwrite(missing_ices_filtered_stock_list,'../output/Stocks_and_Areas_in_ICES_filtered_stock_list_not_present_in_stock_ass_graph_data.csv')
-st_write(stocks_ices_final,'../output/ICES_Stocks_by_ICES_Areas_20160601_3857.shp',append = F)
-st_write(stocks_areas_by_ices_areas_unique,'../output/ICES_Stocks_by_ICES_Areas_Unique_20160601_3857.shp',append = F)
-fwrite(missing_stocks,'../output/stocks_ices_unique_long_with_missing_ICES_Area_geometry.csv')
-fwrite(`st_geometry<-`(stocks_ices_final,NULL),'../output/stocks_ices_unique_long.csv')
+#fwrite(missing_ices_filtered_stock_list,'../output/Stocks_and_Areas_in_ICES_filtered_stock_list_not_present_in_stock_ass_graph_data.csv')
+#st_write(stocks_ices_final,'../output/ICES_Stocks_by_ICES_Areas_20160601_3857.shp',append = F)
+#st_write(stocks_areas_by_ices_areas_unique,'../output/ICES_Stocks_by_ICES_Areas_Unique_20160601_3857.shp',append = F)
+#fwrite(missing_stocks,'../output/stocks_ices_unique_long_with_missing_ICES_Area_geometry.csv')
+#fwrite(`st_geometry<-`(stocks_ices_final,NULL),'../output/stocks_ices_unique_long.csv')
 
 tac_year <- 2022
 # Loading the FMZ_Stocks_v_7_1
@@ -282,23 +282,20 @@ ices_ecoregion_by_ices_areas_fmz_stocks_year <- st_intersection(fmz_stocks_year_
 #icesareas_fmz_stocks_year$Species_TAC <- substring(icesareas_fmz_stocks_year$Stocks_v7_,1,3)
 
 ices_ecoregion_by_ices_areas_fmz_stocks_year$OBJECTID <- NULL
-
-
 ices_ecoregion_by_ices_areas_fmz_stocks_yearDT <- `st_geometry<-`(ices_ecoregion_by_ices_areas_fmz_stocks_year,NULL)
 
-fwrite(ices_ecoregion_by_ices_areas_fmz_stocks_yearDT,
-       '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.csv')
+# fwrite(ices_ecoregion_by_ices_areas_fmz_stocks_yearDT,
+#        '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.csv')
 
-
-st_write(ices_ecoregion_by_ices_areas_fmz_stocks_year,
-         '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.shp',
-         append=F,
-         delete_dsn = T)
-
-st_write(icesareas_fmz_stocks_year,
-         '../output/FMZ_by_ICES_Areas_20160601_4326.shp',
-         append=F,
-         delete_dsn = T)
+# st_write(ices_ecoregion_by_ices_areas_fmz_stocks_year,
+#          '../output/FMZ_by_ICES_Ecoregions_and_Areas_20160601_4326.shp',
+#          append=F,
+#          delete_dsn = T)
+# 
+# st_write(icesareas_fmz_stocks_year,
+#          '../output/FMZ_by_ICES_Areas_20160601_4326.shp',
+#          append=F,
+#          delete_dsn = T)
 
 icesareas_fmz_stocks_year_tableau <- unique(icesareas_fmz_stocks_year,by=c('FMZ_ID','Area_Full'))
 icesareas_fmz_stocks_year_tableau <- icesareas_fmz_stocks_year_tableau[,c("FMZ_ID",'Descriptio',
@@ -307,48 +304,95 @@ icesareas_fmz_stocks_year_tableau <- icesareas_fmz_stocks_year_tableau[,c("FMZ_I
                                                                           'ICES_Area_km2',"geometry")]
 #icesareas_fmz_stocks_2022_tableau <- st_transform(icesareas_fmz_stocks_2022_tableau,4326)
 
-st_write(icesareas_fmz_stocks_year_tableau,'../output/FMZ_by_ICES_Areas_20160601_4326_TABLEAU.shp'
-         ,append = F,
-         delete_dsn = T,
-         overwrite_layer=T)
+# st_write(icesareas_fmz_stocks_year_tableau,'../output/FMZ_by_ICES_Areas_20160601_4326_TABLEAU.shp'
+#          ,append = F,
+#          delete_dsn = T,
+#          overwrite_layer=T)
 
 fmz_stocks_year_tableau <- `st_geometry<-`(fmz_stocks_year[,c('FMZ_ID','STOCK_ID')],NULL)
 #fmz_stocks_2022_tableau$geometry <- NULL
 fmz_stocks_year_tableau <- unique(fmz_stocks_year_tableau,by=c('FMZ_ID','STOCK_ID'))
 stocks_ices_finalDT <- as.data.table(stocks_ices_finalDT)
 stocks_ices_finalDT[,Species_ICES:=toupper(substring(FishStock,1,3))]
+
 fmz_stocks_year_tableau <- as.data.table(fmz_stocks_year_tableau)
 fmz_stocks_year_tableau[,Species_TAC:=substring(STOCK_ID,1,3)]
+
+ices_filtered_stock_list_unique_long[,EcoRegion:=trimws(EcoRegion)]
+#$EcoRegion2 <- NULL
+ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areas <- 
+  merge(ices_filtered_stock_list_unique_long,ices_ecoregion_by_ices_areas,
+                                              by.x='EcoRegion',
+                                              by.y='Ecoregion',all.x = T,allow.cartesian = T)
+
+ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT <- 
+  `st_geometry<-`(st_sf(ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areas),NULL)
+ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT <- unique(ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT)
+
+ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT <- 
+  ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT[,.(StockCode,EcoRegion,Area_Full)]
+
+ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT[,Species_ICES:=toupper(substring(StockCode,1,3))]]
+setnames(ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT,old='StockCode',new='FishStock')
+
+final_ices_stock_list <- rbind(stocks_ices_finalDT,ices_filtered_stock_list_unique_long_by_ecoregion_and_ices_areasDT,fill=T)
+final_ices_stock_list <- unique(final_ices_stock_list)
+
+final_ices_stock_list[,Species_ICES:=toupper(substring(FishStock,1,3))]
+
 sort(unique(fmz_stocks_year_tableau$Species_TAC))
-sort(unique(stocks_ices_finalDT$Species_ICES))
+sort(unique(final_ices_stock_list$Species_ICES))
 
 # Common species
 common_species <- sort(unique(fmz_stocks_year_tableau$Species_TAC))[sort(unique(fmz_stocks_year_tableau$Species_TAC))%in%
-sort(unique(stocks_ices_finalDT$Species_ICES))]
+                                                                      sort(unique(final_ices_stock_list$Species_ICES))]
+
 not_in_common_species <-  sort(unique(fmz_stocks_year_tableau$Species_TAC))[!sort(unique(fmz_stocks_year_tableau$Species_TAC))%in%
-                                                                          sort(unique(stocks_ices_finalDT$Species_ICES))]
-fwrite(fmz_stocks_year_tableau,paste0('../output/FMZ_Stocks_',tac_year,'_TABLEAU.csv'))
-fwrite(stocks_ices_finalDT,'../output/Stocks_ICES_TABLEAU.csv')
+                                                                              sort(unique(final_ices_stock_list$Species_ICES))]
 
-              
-FMZ_Stocks_v7_ICES_Stocks_tableau <- merge(
-  merge(icesareas_fmz_stocks_year_tableau,
-                            fmz_stocks_year_tableau,by='FMZ_ID'),stocks_ices_finalDT,
-  by='Area_Full')
-setnames(FMZ_Stocks_v7_ICES_Stocks_tableau,old=c('species.x','species.y'),
-      new=c('species_TAC','species_ICES'))
-setnames(FMZ_Stocks_v7_ICES_Stocks_tableau,old=c('STOCK_ID','FishStock'),
-         new=c('Stock_TAC','Stock_ICES'))
+fmz_stocks_year_by_ecoregion_and_area <- merge(fmz_stocks_year_tableau,ices_ecoregion_by_ices_areas_fmz_stocks_year,
+                                               by='FMZ_ID',allow.cartesian = T)
 
-# They are not really duplicates
-duplicates <- `st_geometry<-`(FMZ_Stocks_v7_ICES_Stocks_tableau[duplicated(FMZ_Stocks_v7_ICES_Stocks_tableau)|
-                                                  duplicated(FMZ_Stocks_v7_ICES_Stocks_tableau,fromLast = T),],NULL)
 
-#`st_geometry<-`(FMZ_Stocks_v7_ICES_Stocks_tableau,NULL)
-# FMZ_Stocks_v7_ICES_Stocks_tableau <- st_make_valid(FMZ_Stocks_v7_ICES_Stocks_tableau)
-# st_write(FMZ_Stocks_v7_ICES_Stocks_tableau,'../output/FMZ_Stocks_v7_ICES_Stocks_4326_TABLEAU.shp'
-#          ,append = F,
-#          #delete_dsn = T,
-#          overwrite_layer=T)
-fwrite(`st_geometry<-`(FMZ_Stocks_v7_ICES_Stocks_tableau,NULL),
-       paste0('../output/FMZ_Stocks_',tac_year,'_ICES_Stocks_TABLEAU.csv'))
+fmz_stocks_year_by_ecoregion_and_areaDT <- as.data.table(`st_geometry<-`(st_sf(fmz_stocks_year_by_ecoregion_and_area),NULL))
+
+fmz_stocks_year_by_ecoregion_and_areaDT <- unique(fmz_stocks_year_by_ecoregion_and_areaDT)
+
+final_fmz_stock_list <- fmz_stocks_year_by_ecoregion_and_areaDT[,.(STOCK_ID,Species_TAC,FMZ_ID,Ecoregion,Area_Full)]
+
+final_super_stock_list <- merge(final_fmz_stock_list,
+                                final_ices_stock_list,
+                                by.x=c('Species_TAC','Area_Full'),
+                                by.y=c('Species_ICES','Area_Full'),
+                                allow.cartesian = T)
+final_super_stock_list <- unique(final_super_stock_list)
+
+final_super_stock_list[,keep:=ifelse(EcoRegion==Ecoregion,1,0)]
+
+final_super_stock_list_final <- final_super_stock_list[keep==1,]
+final_super_stock_list_final$keep <- NULL
+
+fwrite(final_fmz_stock_list,paste0('../output/Final_FMZ_Stocks_',tac_year,'.csv'))
+fwrite(final_ices_stock_list,'../output/Final_Stocks_ICES.csv')
+fwrite(final_super_stock_list_final,paste0('../output/Final_FMZ_ICES_Stocks_',tac_year,'.csv'))
+
+# SF OBJECT
+# final_fmz_stock_list_tableau <- fmz_stocks_year_by_ecoregion_and_area[,c('STOCK_ID','Species_TAC','FMZ_ID','Ecoregion','Area_Full',
+#                                                                    'geometry')]
+# final_super_stock_list_tableau <- merge(final_fmz_stock_list_tableau,
+#                                 final_ices_stock_list,
+#                                 by.x=c('Species_TAC','Area_Full'),
+#                                 by.y=c('Species_ICES','Area_Full'),
+#                                 allow.cartesian = T)
+# 
+# final_super_stock_list_tableau <- 
+# final_super_stock_list_tableau[final_super_stock_list_tableau$EcoRegion==final_super_stock_list_tableau$Ecoregion,]
+# final_fmz_stock_list_tableau <- unique(final_fmz_stock_list_tableau)
+# final_super_stock_list_tableau_sf <- st_sf(final_super_stock_list_tableau)
+# final_super_stock_list_tableau_sf<- st_collection_extract(final_super_stock_list_tableau_sf,"POLYGON")
+# final_super_stock_list_tableau_sf <- st_transform(final_super_stock_list_tableau_sf,4326)
+# 
+# st_write(final_super_stock_list_tableau_sf,
+#          paste0('../output/Final_FMZ_ICES_Stocks_',tac_year,'_4326.shp'),
+#          append = F
+#         )
