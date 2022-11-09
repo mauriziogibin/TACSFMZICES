@@ -392,7 +392,8 @@ fwrite(final_super_stock_list_final,paste0('../output/Final_FMZ_ICES_Stocks_',ta
 # final_super_stock_list_tableau_sf<- st_collection_extract(final_super_stock_list_tableau_sf,"POLYGON")
 # final_super_stock_list_tableau_sf <- st_transform(final_super_stock_list_tableau_sf,4326)
 # 
+# finlename <- paste0('../output/Final_FMZ_ICES_Stocks_',tac_year,'_3035.shp')
 # st_write(final_super_stock_list_tableau_sf,
-#          paste0('../output/Final_FMZ_ICES_Stocks_',tac_year,'_4326.shp'),
+#          finlename,
 #          append = F
 #         )
